@@ -181,6 +181,15 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 		}
 	}
 
+	for _, tx := range utxos {
+		if err := etl.mq.Produce(etl.topic, []byte(tx.TX), tx.TX); err != nil {
+			etl.ErrorF("mq insert tx %s err :%s", tx.TX, err)
+			return err
+		}
+
+		etl.DebugF("tx %s event send", tx.TX)
+	}
+
 	return nil
 }
 
