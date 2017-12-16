@@ -160,20 +160,13 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 			to = b58checkencodeNEO(0x17, toBytes)
 		}
 
-		valueBytes, err := hex.DecodeString(notify.State.Value[3].Value)
-
-		if err != nil {
-			etl.ErrorF("decode value %s err, %s", notify.State.Value[3].Value, err)
-			continue
-		}
-
 		utxos = append(utxos, &neodb.Tx{
 			TX:         notify.Tx,
 			Block:      uint64(block.Index),
 			From:       from,
 			To:         to,
 			Asset:      notify.Asset,
-			Value:      big.NewInt(0).SetBytes(valueBytes).Text(10),
+			Value:      notify.State.Value[3].Value,
 			CreateTime: time.Unix(block.Time, 0),
 		})
 	}
