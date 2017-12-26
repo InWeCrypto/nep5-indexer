@@ -68,7 +68,7 @@ func NewMonitor(conf *config.Config) (*Monitor, error) {
 		etl:          etl,
 		pullDuration: time.Second * conf.GetDuration("indexer.pull", 2),
 		db:           db,
-		filepath:     config.GetString("indexer.notification", "./notifications"),
+		filepath:     conf.GetString("indexer.notification", "./notifications"),
 	}, nil
 }
 
