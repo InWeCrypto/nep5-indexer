@@ -36,8 +36,8 @@ type Notify struct {
 
 // State .
 type State struct {
-	Type  string   `json:"type"`
-	Value []*Value `json:"value"`
+	Type  string      `json:"type"`
+	Value interface{} `json:"value"`
 }
 
 // Value .

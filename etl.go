@@ -3,6 +3,7 @@ package indexer
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"time"
@@ -125,19 +126,36 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 	utxos := make([]*neodb.Tx, 0)
 
 	for _, notify := range notifies {
-		if len(notify.State.Value) == 0 {
+
+		if _, ok := notify.State.Value.([]interface{}); !ok {
 			continue
 		}
 
-		if notify.State.Value[0].Value != "7472616e73666572" {
-			etl.DebugF("notify type is %s, skip it", notify.State.Value[0].Value)
-			continue
-		}
+		var values []*Value
 
-		fromBytes, err := hex.DecodeString(notify.State.Value[1].Value)
+		data, err := json.Marshal(notify.State.Value)
 
 		if err != nil {
-			etl.ErrorF("decode from %s err, %s", notify.State.Value[1].Value, err)
+			return err
+		}
+
+		if err := json.Unmarshal(data, &values); err != nil {
+			return err
+		}
+
+		if len(values) == 0 {
+			continue
+		}
+
+		if values[0].Value != "7472616e73666572" {
+			etl.DebugF("notify type is %s, skip it", values[0].Value)
+			continue
+		}
+
+		fromBytes, err := hex.DecodeString(values[1].Value)
+
+		if err != nil {
+			etl.ErrorF("decode from %s err, %s", values[1].Value, err)
 			continue
 		}
 
@@ -147,10 +165,10 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 			from = b58checkencodeNEO(0x17, fromBytes)
 		}
 
-		toBytes, err := hex.DecodeString(notify.State.Value[2].Value)
+		toBytes, err := hex.DecodeString(values[2].Value)
 
 		if err != nil {
-			etl.ErrorF("decode to %s err, %s", notify.State.Value[2].Value, err)
+			etl.ErrorF("decode to %s err, %s", values[2].Value, err)
 			continue
 		}
 
@@ -166,7 +184,7 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 			From:       from,
 			To:         to,
 			Asset:      notify.Asset,
-			Value:      notify.State.Value[3].Value,
+			Value:      values[3].Value,
 			CreateTime: time.Unix(block.Time, 0),
 		})
 	}
