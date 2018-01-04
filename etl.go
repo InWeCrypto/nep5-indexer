@@ -126,8 +126,7 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 	utxos := make([]*neodb.Tx, 0)
 
 	for _, notify := range notifies {
-
-		if _, ok := notify.State.Value.([]interface{}); !ok {
+		if notify.State.Type != "Array" {
 			continue
 		}
 
@@ -152,7 +151,9 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 			continue
 		}
 
-		fromBytes, err := hex.DecodeString(values[1].Value)
+		fromString, _ := values[1].Value.(string)
+
+		fromBytes, err := hex.DecodeString(fromString)
 
 		if err != nil {
 			etl.ErrorF("decode from %s err, %s", values[1].Value, err)
@@ -165,7 +166,9 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 			from = b58checkencodeNEO(0x17, fromBytes)
 		}
 
-		toBytes, err := hex.DecodeString(values[2].Value)
+		toString, _ := values[2].Value.(string)
+
+		toBytes, err := hex.DecodeString(toString)
 
 		if err != nil {
 			etl.ErrorF("decode to %s err, %s", values[2].Value, err)
@@ -178,13 +181,15 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 			to = b58checkencodeNEO(0x17, toBytes)
 		}
 
+		valstr, _ := values[3].Value.(string)
+
 		utxos = append(utxos, &neodb.Tx{
 			TX:         notify.Tx,
 			Block:      uint64(block.Index),
 			From:       from,
 			To:         to,
 			Asset:      notify.Asset,
-			Value:      values[3].Value,
+			Value:      valstr,
 			CreateTime: time.Unix(block.Time, 0),
 		})
 	}

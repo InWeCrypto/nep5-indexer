@@ -42,8 +42,8 @@ type State struct {
 
 // Value .
 type Value struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
+	Type  string      `json:"type"`
+	Value interface{} `json:"value"`
 }
 
 // NewMonitor .
