@@ -125,6 +125,8 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 
 	utxos := make([]*neodb.Tx, 0)
 
+	etl.DebugF("handle notify %d", block.Index)
+
 	for _, notify := range notifies {
 		if notify.State.Type != "Array" {
 			continue
@@ -212,6 +214,8 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 
 		etl.DebugF("tx %s event send", tx.TX)
 	}
+
+	etl.DebugF("handle notify %d -- finish", block.Index)
 
 	return nil
 }
