@@ -185,13 +185,22 @@ func (etl *ETL) Handle(notifies []*Notify, block *neogo.Block) error {
 
 		valstr, _ := values[3].Value.(string)
 
+		valBytes, err := hex.DecodeString(valstr)
+
+		valBytes = reverseBytes(valBytes)
+
+		if err != nil {
+			etl.ErrorF("decode value %s err, %s", valstr, err)
+			continue
+		}
+
 		utxos = append(utxos, &neodb.Tx{
 			TX:         notify.Tx,
 			Block:      uint64(block.Index),
 			From:       from,
 			To:         to,
 			Asset:      notify.Asset,
-			Value:      valstr,
+			Value:      fmt.Sprintf("%d", new(big.Int).SetBytes(valBytes)),
 			CreateTime: time.Unix(block.Time, 0),
 		})
 	}
@@ -236,4 +245,12 @@ func (etl *ETL) batchInsertTx(rows []*neodb.Tx) (err error) {
 	_, err = etl.engine.Insert(&rows)
 
 	return
+}
+
+func reverseBytes(s []byte) []byte {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+
+	return s
 }
